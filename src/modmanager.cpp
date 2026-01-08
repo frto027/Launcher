@@ -221,7 +221,7 @@ void ModManagerFrame::LoadModsFromFolder() {
     for (const auto& entry : fs::directory_iterator(_modspath)) {
         if (entry.is_directory()) {
             ModInfo info;
-            info.folderName = entry.path().filename().string();
+            info.folderName = (const char *)entry.path().u8string().c_str();
             info.displayName = info.folderName;
             info.id = info.folderName;
             info.description = info.folderName;
@@ -230,7 +230,8 @@ void ModManagerFrame::LoadModsFromFolder() {
             try {
                 fs::path metadataPath = entry.path() / "metadata.xml";
                 if (fs::exists(metadataPath)) {
-                    rapidxml::file<> xmlFile(metadataPath.string().c_str());
+                    std::ifstream in(metadataPath.wstring());
+                    rapidxml::file<> xmlFile(in);
                     rapidxml::xml_document<> doc;
                     doc.parse<0>(xmlFile.data());
 
@@ -265,7 +266,7 @@ void ModManagerFrame::RefreshLists() {
     wxString filter = _searchctrl->GetValue().Lower();
     _enabledlist->Clear();
     _disabledlist->Clear();
-
+    
     for (const ModInfo& mod : allMods) {
         wxString name = wxString::FromUTF8(mod.displayName);
         if (mod.islocal) { name = "[[DEV/NoSteam]] " + name; }
